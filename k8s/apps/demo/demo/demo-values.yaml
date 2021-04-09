@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apple-app
+  namespace: demo
+  annotations:
+    app.kubernetes.io/cluster: demo
+  labels:
+    k8s-app: demo-apple
+    part-of: demo
+    cluster: demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: apple-app
+        image: harbor.k8s-local.io/demo/http-echo:0.4.0-apple # {"$imagepolicy": "flux-system:demo-app-apple"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banana-app
+  namespace: demo
+  annotations:
+    app.kubernetes.io/cluster: demo
+  labels:
+    k8s-app: demo-banana
+    part-of: demo
+    cluster: demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: banana-app
+        image: harbor.k8s-local.io/demo/http-echo:0.4.1-banana # {"$imagepolicy": "flux-system:demo-app-banana"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: main-app
+  namespace: demo
+  annotations:
+    app.kubernetes.io/cluster: demo
+  labels:
+    k8s-app: demo-main
+    part-of: demo
+    example-lable: example-value
+spec:
+  template:
+    spec:
+      containers:
+      - name: main-app
+        image: harbor.k8s-local.io/demo/http-echo:0.4.0 # {"$imagepolicy": "flux-system:demo-app"}

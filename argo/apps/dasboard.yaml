@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dashboard
+  namespace: argocd
+spec:
+  project: monitoring
+  source:
+    repoURL: 'git@github.com:Siebjee/k8s.git'
+    path: k8s/dashboard
+    targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubernetes-dashboard

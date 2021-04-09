@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics
+  namespace: argocd
+spec:
+  project: monitoring
+  source:
+    repoURL: 'git@github.com:Siebjee/k8s.git'
+    path: k8s/metrics-server
+    targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
