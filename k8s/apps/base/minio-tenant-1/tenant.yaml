@@ -1,0 +1,66 @@
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: minio-tenant-1
+  namespace: minio-tenant-1
+  labels:
+    app: minio
+  annotations:
+    prometheus.io/path: /minio/prometheus/metrics
+    prometheus.io/port: "9000"
+    prometheus.io/scrape: "true"
+spec:
+  image: minio/minio:RELEASE.2021-03-01T04-20-55Z
+  imagePullPolicy: IfNotPresent
+  credsSecret:
+    name: minio-creds-secret
+  pools:
+  - servers: 1
+    volumesPerServer: 4
+    volumeClaimTemplate:
+      metadata:
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 16Gi
+      limits:
+        cpu: 500m
+        memory: 16Gi
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+
+  mountPath: /export
+  requestAutoCert: false
+
+  s3:
+    bucketDNS: false
+
+  podManagementPolicy: Parallel
+  serviceMetadata:
+    minioServiceLabels:
+      label: minio-svc
+    minioServiceAnnotations:
+      v2.min.io: minio-svc
+    consoleServiceLabels:
+      label: console-svc
+    consoleServiceAnnotations:
+      v2.min.io: console-svc
+
+  console:
+    image: minio/console:v0.6.3
+    replicas: 1
+    consoleSecret:
+      name: console-secret
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 2000
+      runAsNonRoot: true

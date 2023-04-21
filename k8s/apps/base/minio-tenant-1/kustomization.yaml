@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: app-minio
+namespace: minio-tenant-1
+resources:
+- namespace.yaml
+- secret-console.yaml
+- secret-minio.yaml
+- tenant.yaml
+- ingress.yaml

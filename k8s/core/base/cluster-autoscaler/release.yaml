@@ -1,0 +1,32 @@
+# source: https://github.com/aws/eks-charts/tree/master/stable/aws-for-fluent-bit
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cluster-autoscaler
+  namespace: cluster-autoscaler
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: cluster-autoscaler
+      version: ">=9.10.4 <10.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: cluster-autoscaler
+        namespace: flux-system
+      interval: 1h
+  values:
+    cloudProvider: aws
+    awsRegion: eu-west-1
+    resources:
+      limits:
+        cpu: 100m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+    extraArgs:
+      logtostderr: true
+      scale-down-enabled: true
+      stderrthreshold: info
+      v: 4

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-agent-traces
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      name: grafana-agent-traces
+  template:
+    metadata:
+      labels:
+        name: grafana-agent-traces
+    spec:
+      containers:
+      - args:
+        - -config.file=/etc/agent/agent.yaml
+        - -server.http.address=0.0.0.0:3100
+        command:
+        - /bin/agent
+        env:
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: grafana/agent:v0.30.2
+        imagePullPolicy: IfNotPresent
+        name: grafana-agent-traces
+        ports:
+        - containerPort: 3100
+          name: http-metrics
+        - containerPort: 4317
+          name: otlp
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/agent
+          name: grafana-agent-traces
+      serviceAccountName: grafana-agent-traces
+      volumes:
+      - configMap:
+          name: grafana-agent-traces
+        name: grafana-agent-traces

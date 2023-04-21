@@ -1,0 +1,250 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: grafana
+  namespace: grafana
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: grafana
+      version: ">=6.29.2 <7.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 5m
+  values:
+    podAnnotations:
+      phlare.grafana.com/scrape: "true"
+      phlare.grafana.com/port: "6060"
+    rbac:
+      pspEnabled: false
+      pspUSeAppArmor: false
+    env:
+      GF_DIAGNOSTICS_PROFILING_ENBLED: true
+      GF_DIAGNOSTICS_PROFILING_ADDR: 0.0.0.0
+      GF_DIAGNOSTICS_PROFILING_PORT: 6060
+      GF_FEATURE_TOGGLES_ENABLE: flameGraph
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+        - name: Mimir
+          type: prometheus
+          uid: mimir
+          url: http://grafana-mimir-nginx.grafana-mimir.svc.cluster.local/prometheus/
+          isDefault: true
+          jsonData:
+            timeInterval: 15s
+        - name: Loki
+          type: loki
+          uid: loki
+          url: http://loki-gateway.grafana-loki.svc.cluster.local/
+          isDefault: false
+        - name: Tempo
+          type: tempo
+          uid: tempo
+          url: http://grafana-tempo-query-frontend.grafana-tempo.svc.cluster.local:3100
+          isDefault: false
+          jsonData:
+            nodeGraph:
+              enabled: true
+        - name: Phlare
+          type: phlare
+          uid: phlare
+          url: http://grafana-phlare-querier.grafana-phlare.svc.cluster.local:4100/
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+        - name: 'flux'
+          orgId: 1
+          folder: 'flux'
+          type: file
+          disableDeletion: false
+          editable: false
+          options:
+            path: /var/lib/grafana/dashboards/flux
+        - name: 'redis'
+          orgId: 1
+          folder: 'redis'
+          type: file
+          disableDeletion: false
+          editable: false
+          options:
+            path: /var/lib/grafana/dashboards/redis
+        - name: 'grafana-mimir'
+          orgId: 1
+          folder: 'grafana / Mimir'
+          type: file
+          disableDeletion: false
+          editable: false
+          options:
+            path: /var/lib/grafana/dashboards/grafana-mimir
+        - name: 'grafana-loki'
+          orgId: 1
+          folder: 'grafana / Loki'
+          type: file
+          disableDeletion: false
+          editable: false
+          options:
+            path: /var/lib/grafana/dashboards/grafana-loki
+    dashboards:
+      flux:
+        cluster:
+          url: https://raw.githubusercontent.com/fluxcd/flux2/main/manifests/monitoring/monitoring-config/dashboards/cluster.json
+          datasource: Mimir
+        control-plane:
+          url: https://raw.githubusercontent.com/fluxcd/flux2/main/manifests/monitoring/monitoring-config/dashboards/control-plane.json
+          datasource: Mimir
+        logs:
+          url: https://raw.githubusercontent.com/fluxcd/flux2/main/manifests/monitoring/monitoring-config/dashboards/logs.json
+          datasource: Loki
+      redis:
+        redis-exporter:
+          # url: https://raw.githubusercontent.com/oliver006/redis_exporter/master/contrib/grafana_prometheus_redis_dashboard.json
+          url: https://raw.githubusercontent.com/Siebjee/redis_exporter/de3d12f397e7f1955546928189b27a50ea64e294/contrib/grafana_prometheus_redis_dashboard.json
+          datasource: Mimir
+      grafana-mimir:
+        alertmanager-resources:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-alertmanager-resources.json
+          datasource: Mimir
+        alertmanager:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-alertmanager.json
+          datasource: Mimir
+        compactor-resources:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-compactor-resources.json
+          datasource: Mimir
+        compactor:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-compactor.json
+          datasource: Mimir
+        config:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-config.json
+          datasource: Mimir
+        object-store:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-object-store.json
+          datasource: Mimir
+        overrides:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-overrides.json
+          datasource: Mimir
+        overview-networking:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-overview-networking.json
+          datasource: Mimir
+        overview-resources:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-overview-resources.json
+          datasource: Mimir
+        overview:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-overview.json
+          datasource: Mimir
+        queries:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-queries.json
+          datasource: Mimir
+        reads-networking:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-reads-networking.json
+          datasource: Mimir
+        reads-resources:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-reads-resources.json
+          datasource: Mimir
+        reads:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-reads.json
+          datasource: Mimir
+        remote-ruler-reads-resources:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-remote-ruler-reads-resources.json
+          datasource: Mimir
+        remote-ruler-reads:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-remote-ruler-reads.json
+          datasource: Mimir
+        rollout-progress:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-rollout-progress.json
+          datasource: Mimir
+        ruler:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-ruler.json
+          datasource: Mimir
+        scaling:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-scaling.json
+          datasource: Mimir
+        slow-queries:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-slow-queries.json
+          datasource: Mimir
+        tenants:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-tenants.json
+          datasource: Mimir
+        top-tenants:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-top-tenants.json
+          datasource: Mimir
+        writes-networking:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-writes-networking.json
+          datasource: Mimir
+        writes-resources:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-writes-resources.json
+          datasource: Mimir
+        writes:
+          url: https://raw.githubusercontent.com/grafana/mimir/main/operations/mimir-mixin-compiled/dashboards/mimir-writes.json
+          datasource: Mimir
+      grafana-loki:
+        chunks:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-chunks.json
+          datasource: Mimir
+        deletion:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-deletion.json
+          datasource: Mimir
+        logs:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-logs.json
+          datasource: Mimir
+        reads-resources:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-reads-resources.json
+          datasource: Mimir
+        reads:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-reads.json
+          datasource: Mimir
+        retention:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-retention.json
+          datasource: Mimir
+        writes-resources:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-writes-resources.json
+          datasource: Mimir
+        writes:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-writes.json
+          datasource: Mimir
+        operational:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-operational.json
+          datasource: Mimir
+        recording-rules:
+          url: https://raw.githubusercontent.com/grafana/loki/main/production/loki-mixin-compiled/dashboards/loki-mixin-recording-rules.json
+          datasource: Mimir
+    ingress:
+      enabled: true
+      ingressClassName: haproxy
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        ingress.kubernetes.io/ssl-redirect: "true"
+    sidecar:
+      enableUniqueFilenames: false
+      alerts:
+        enabled: true
+        label: grafana-alert
+        searchNamespace: ALL
+        resource: both
+        ignoreAlreadyProcessed: true
+      dashboards:
+        enabled: true
+        label: grafana-dashboard
+        labelValue: null
+        folder: /tmp/dashboards
+        searchNamespace: ALL
+        watchMethod: WATCH
+        folderAnnotation: grafana-dashboard-folder
+        provider:
+          name: sidecarProvider
+          orgid: 1
+          disableDelete: false
+          allowUiUpdates: false
+          foldersFromFilesStructure: true
+      plugins:
+        enabled: true
+        label: grafana-plugin
+        labelValue: null
+        searchNamespace: null
+        watchMethod: WATCH
+        resource: both

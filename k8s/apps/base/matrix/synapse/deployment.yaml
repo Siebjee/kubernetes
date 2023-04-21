@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synapse
+spec:
+  selector:
+    matchLabels:
+      app: synapse
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: synapse
+    spec:
+      securityContext:
+        fsGroup: 991
+        fsGroupChangePolicy: "Always"
+      nodeSelector:
+        matrix: "true"
+      tolerations:
+      - key: matrix
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: synapse
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: synapse
+        image: synapse
+        # args: ["generate"]
+        # env:
+        # - name: SYNAPSE_SERVER_NAME
+        #   value: "matrix.gcp.siebjee.nl"
+        # - name: SYNAPSE_REPORT_STATS
+        #   value: "yes"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        ports:
+        - containerPort: 8008
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: synapse

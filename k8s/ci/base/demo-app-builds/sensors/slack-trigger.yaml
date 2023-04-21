@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: slackhook
+  namespace: demo-app-builds
+spec:
+  template:
+    serviceAccountName: argo-events
+  dependencies:
+  - name: slack-dep
+    eventSourceName: slackhook
+    eventName: slack
+  triggers:
+  - template:
+      name: slack-trigger
+      slack:
+        channel: demo
+        message: "Disturbance in the CI i felt. Need to check you must."
+        slackToken:
+          key: token
+          name: slack-secret
+    parameters:
+    - src:
+        dependencyName: slack-dep
+        dataKey: body.channel
+      dest: slack.channel
+    - src:
+        dependencyName: slack-dep
+        dataKey: body.message
+      dest: slack.message

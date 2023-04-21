@@ -1,0 +1,22 @@
+timeout: 3600s
+
+steps:
+- id: static-analysis
+  name: docker.io/alpine:3.15.0
+  entrypoint: sh
+  timeout: 3600s
+  args:
+  - -c
+  - |
+    set -eou pipefail
+    apk add --no-cache wget curl bash python3 py3-pip
+
+    curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v4.2.0/kustomize_v4.2.0_linux_amd64.tar.gz -o kustomize.tar.gz
+    tar zxvf kustomize.tar.gz
+    install -o root -g root -m 0755 kustomize /usr/local/bin/kustomize
+
+    wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+    tar xf kubeval-linux-amd64.tar.gz
+    install -o root -g root -m 0755 kubeval /usr/local/bin/kubeval
+
+    bin/static-analysis.sh /usr/local/bin/kubeval $(pwd)

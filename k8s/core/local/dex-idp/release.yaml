@@ -1,0 +1,70 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: dex-idp
+  namespace: dex-idp
+spec:
+  values:
+    ingress:
+      enabled: true
+      annotations:
+        cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+      tls:
+      - hosts:
+        - dex.k8s-local.io
+        secretName: dex.k8s-local.io
+      hosts:
+      - host: dex.k8s-local.io
+        paths:
+        - path: /
+          pathType: ImplementationSpecific
+    configSecret:
+      create: true
+    config:
+      issuer: https://dex.k8s-local.io/dex
+      storage:
+        type: memory
+
+      staticClients:
+      - id: argo-server
+        redirectURIs:
+        - https://argo.k8s-local.io/oauth2/callback
+        name: Argo Server
+        secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+
+      connectors:
+      - type: ldap
+        # Required field for connector id.
+        id: ldap
+        # Required field for connector name.
+        name: LDAP
+        config:
+          host: openldap.ldap.svc.cluster.local:389
+          insecureNoSSL: true
+          bindDN: cn=admin,dc=example,dc=com
+          bindPW: notapassword
+
+          usernamePrompt: Enter your gecos
+          userSearch:
+            baseDN: ou=users,dc=example,dc=com
+            filter: "(objectClass=posixAccount)"
+            username: gecos
+            # "DN" (case sensitive) is a special attribute name. It indicates that
+            # this value should be taken from the entity's DN not an attribute on
+            # the entity.
+            idAttr: DN
+            emailAttr: mail
+            nameAttr: cn
+
+          groupSearch:
+            baseDN: ou=groups,dc=example,dc=com
+            filter: "(objectClass=groupOfNames)"
+
+            userMatchers:
+            # A user is a member of a group when their DN matches
+            # the value of a "member" attribute on the group entity.
+            - userAttr: DN
+              groupAttr: member
+
+            # The group name should be the "cn" value.
+            nameAttr: cn

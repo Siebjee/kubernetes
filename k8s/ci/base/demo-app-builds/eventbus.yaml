@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventBus
+metadata:
+  name: default
+  namespace: demo-app-builds
+spec:
+  nats:
+    native:
+      replicas: 3
+      auth: token
+      containerTemplate:
+        resources:
+          requests:
+            cpu: "10m"
+      metricsContainerTemplate:
+        resources:
+          requests:
+            cpu: "10m"
+      antiAffinity: false

@@ -1,0 +1,43 @@
+kind: ConfigMap
+metadata:
+  name: grafana-agent-traces
+apiVersion: v1
+data:
+  agent.yaml: |
+    traces:
+      configs:
+        - name: tempo
+          batch:
+            send_batch_size: 1000
+            timeout: 5s
+          receivers:
+            otlp:
+              protocols:
+                grpc: null
+                http: null
+          service_graphs:
+            enabled: true
+          remote_write:
+            - endpoint: grafana-tempo-distributor:4317
+              insecure: true
+          scrape_configs:
+            - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              job_name: kubernetes-pods
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_namespace
+                  target_label: namespace
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_name
+                  target_label: pod
+                - action: replace
+                  source_labels:
+                    - __meta_kubernetes_pod_container_name
+                  target_label: container
+              tls_config:
+                  ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                  insecure_skip_verify: false

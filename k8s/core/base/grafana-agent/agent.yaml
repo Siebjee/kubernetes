@@ -1,0 +1,19 @@
+apiVersion: monitoring.grafana.com/v1alpha1
+kind: GrafanaAgent
+metadata:
+  name: grafana-agent
+spec:
+  image: grafana/agent
+  logLevel: info
+  serviceAccountName: grafana-agent
+  metrics:
+    scrapeInterval: 15s
+    instanceSelector:
+      matchLabels:
+        agent: grafana-agent-metrics
+    externalLabels:
+      cluster: dummy
+  logs:
+    instanceSelector:
+      matchLabels:
+        agent: grafana-agent-logs

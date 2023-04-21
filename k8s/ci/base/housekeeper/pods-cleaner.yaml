@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pods-cleaner
+  namespace: flux-system
+spec:
+  suspend: false
+  schedule: 0 */6 * * *
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: housekeeper
+          restartPolicy: Never
+          containers:
+          - image: bitnami/kubectl:1.24.3
+            name: pods-cleaner
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/bash
+            - -ce
+            - |-
+              kubectl get pod \
+                --field-selector status.phase!=Running \
+                -A \
+                -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase,NAMEDPACE:.metadata.namespace | awk '{ print "kubectl delete pod " $1 " --namespace " $3}' | bash

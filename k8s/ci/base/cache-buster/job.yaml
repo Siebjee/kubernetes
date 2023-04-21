@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cache-buster
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: savage
+      initContainers:
+      - name: init
+        image: bitnami/kubectl:1.24.3
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: env-vars
+        command:
+        - /bin/sh
+        - -ce
+        args:
+        - |-
+          until kubectl get deployment siebjee --namespace siebjee -o json | jq -erc --arg APP_IMAGE "${APP_IMAGE}" '.spec.template.spec.containers[0] | select(.image == $APP_IMAGE)'; do echo "Nope :("; sleep 1; done
+          kubectl rollout status deployment/siebjee --namespace siebjee
+      containers:
+      - name: siebjee
+        image: curlimages/curl:7.85.0
+        envFrom:
+        - configMapRef:
+            name: env-vars
+        - secretRef:
+            name: secret-cf
+        command:
+        - /bin/sh
+        - -c
+        args:
+        - |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/purge_cache" \
+            -H "Authorization: ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"files":["https://siebjee.nl","https://siebjee.nl/posts/index.xml", "https://siebjee.nl/sitemap.xml"]}'

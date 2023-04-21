@@ -1,0 +1,100 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: loki-distributed
+  namespace: grafana-loki
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: loki-distributed
+      version: ">=0.66.4 <1.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 1m
+  values:
+    fullnameOverride: loki
+    serviceMonitor:
+      enabled: true
+      labels:
+        instance: primary
+    serviceAccount:
+      create: true
+      name: grafana-loki
+    ruler:
+      enabled: true
+      extraVolumes:
+      - name: loki-rules-generated
+        emptyDir: {}
+      extraVolumeMounts:
+      - name: loki-rules-generated
+        mountPath: /rules
+      directories:
+        fake:
+          rules.yaml: |
+            groups:
+              - name: should_fire
+                rules:
+                  - alert: HighPercentageError
+                    expr: |
+                      sum(rate({app="foo", env="production"} |= "error" [5m])) by (job)
+                        /
+                      sum(rate({app="foo", env="production"}[5m])) by (job)
+                        > 0.05
+                    for: 10m
+                    labels:
+                        severity: page
+                    annotations:
+                        summary: High request latency
+              - name: credentials_leak
+                rules: 
+                  - alert: http-credentials-leaked
+                    annotations: 
+                      message: "{{ $labels.job }} is leaking http basic auth credentials."
+                    expr: 'sum by (cluster, job, pod) (count_over_time({namespace="prod"} |~ "http(s?)://(\\w+):(\\w+)@" [5m]) > 0)'
+                    for: 10m
+                    labels: 
+                      severity: critical
+    loki:
+      structuredConfig:
+        ruler:
+          wal:
+            dir: /tmp/loki/ruler-wal
+          storage:
+            type: local
+            local:
+              directory: /etc/loki/rules
+          rule_path: /tmp/loki/rules
+          remote_write:
+            enabled: true
+            client:
+              url: http://grafana-mimir-nginx.grafana-mimir.svc.cluster.local/api/v1/push
+        ingester:
+          max_transfer_retries: 0
+          chunk_idle_period: 1h
+          chunk_target_size: 1536000
+          max_chunk_age: 1h
+        storage_config:
+          boltdb_shipper:
+            shared_store: aws
+        schema_config:
+          configs:
+          - from: "2022-12-02"
+            store: boltdb-shipper
+            object_store: aws
+            schema: v11
+            index:
+              prefix: loki_index_
+              period: 24h
+        limits_config:
+          max_global_streams_per_user: 5000
+          max_query_length: 0h
+          max_query_parallelism: 32
+          max_streams_per_user: 0
+          max_query_series: 11000
+        server:
+          grpc_server_max_recv_msg_size: 104857600
+          grpc_server_max_send_msg_size: 104857600
+          grpc_server_max_concurrent_streams: 1000

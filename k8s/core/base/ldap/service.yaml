@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openldap
+  namespace: ldap
+spec:
+  ports:
+  - name: openldap
+    port: 389
+    targetPort: 389
+    protocol: TCP
+  selector:
+    app: ldap

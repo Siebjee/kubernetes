@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: main-app
+  namespace: demo
+  labels:
+    k8s-app: demo-main
+    part-of: demo
+    example-label: geen_ideee
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: main-app
+  template:
+    metadata:
+      labels:
+        app: main-app
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: main-app
+        image: harbor.k8s-local.io/demo/http-echo:0.1.0
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "10m"
+        livenessProbe:
+          exec:
+            command:
+            - /usr/local/bin/healthcheck
+            - -url
+            - http://localhost:80
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - /usr/local/bin/healthcheck
+            - -url
+            - http://localhost:80
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+          periodSeconds: 30

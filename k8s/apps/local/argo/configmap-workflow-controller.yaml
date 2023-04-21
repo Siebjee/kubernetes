@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workflow-controller-configmap
+data:
+  sso: |
+    issuer: https://dex.k8s-local.io/dex
+    clientId:
+      name: argo-server-sso
+      key: clientID
+    clientSecret:
+      name: argo-server-sso
+      key: clientSecret
+    redirectUrl: https://argo.k8s-local.io/oauth2/callback
+    scopes:
+    - groups
+    - email
+    insecureSkipVerify: true
+    rbac:
+      enabled: true

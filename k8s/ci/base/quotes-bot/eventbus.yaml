@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventBus
+metadata:
+  name: default
+  namespace: quotes-bot
+spec:
+  nats:
+    native:
+      replicas: 3
+      auth: token
+      maxAge: "0h15m"
+      containerTemplate:
+        resources:
+          requests:
+            cpu: "10m"
+      metricsContainerTemplate:
+        resources:
+          requests:
+            cpu: "10m"
+      antiAffinity: false

@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sealed-secrets
+  namespace: sealed-secrets
+  labels:
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/instance: sealed-secrets
+    app.kubernetes.io/version: 0.13.1
+    helm.sh/chart: sealed-secrets-0.13.1
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: hook-succeeded
+spec:
+  template:
+    metadata:
+      name: sealed-secrets-helm-hook
+      labels:
+        app.kubernetes.io/managed-by: helm
+        app.kubernetes.io/instance: sealed-secrets
+        helm.sh/chart: sealed-secrets-0.13.1
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: post-install-job
+        image: bitnami/kubectl:1.24.3
+        command:
+        - /bin/bash
+        - -c
+        args:
+        - |
+          kubectl delete secrets -l 'sealedsecrets.bitnami.com/sealed-secrets-key,!demo.master.key'
+          kubectl rollout restart deployment sealed-secrets

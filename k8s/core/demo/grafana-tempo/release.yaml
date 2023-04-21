@@ -1,0 +1,23 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: grafana-tempo
+  namespace: grafana-tempo
+spec:
+  values:
+    global_overrides:
+      max_bytes_per_tag_values_query: 0
+
+    compactor:
+      resources:
+        requests:
+          memory: 2Gi
+        limits:
+          memory: 2Gi
+
+    distributor:
+      config:
+        log_received_spans:
+          enabled: true
+          filter_by_status_error: true
+          include_all_attributes: true

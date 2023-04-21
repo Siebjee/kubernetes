@@ -1,0 +1,10 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  name: helm-demo
+  namespace: flux-system
+spec:
+  url: https://harbor.k8s-local.io/chartrepo/demo
+  interval: 10m
+  secretRef:
+    name: harbor-tls-certs

@@ -1,0 +1,47 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: banana-service
+  namespace: demo
+  labels:
+    k8s-app: demo-banana-service
+    part-of: demo
+spec:
+  selector:
+    app: banana-app
+  ports:
+  - name: http-banana
+    port: 80
+    targetPort: 80
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: main-service
+  namespace: demo
+  labels:
+    k8s-app: demo-main-service
+    part-of: demo
+spec:
+  selector:
+    app: main-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: apple-service
+  namespace: demo
+  labels:
+    k8s-app: demo-apple-service
+    part-of: demo
+spec:
+  selector:
+    app: apple-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80

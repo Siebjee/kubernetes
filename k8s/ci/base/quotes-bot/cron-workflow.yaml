@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: bot
+  namespace: quotes-bot
+spec:
+  schedule: "0 * * * *"
+  concurrencyPolicy: "Replace"
+  timezone: "UTC"
+  startingDeadlineSeconds: 0
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  suspend: false
+  workflowSpec:
+    entrypoint: slack
+    volumes:
+    - name: my-quotes
+      path: /mnt/
+      configMap:
+        name: my-quotes
+    templates:
+    - name: slack
+      container:
+        image: alpine:latest
+        command: [sh, -c]
+        volumeMounts:
+        - name: my-quotes
+          mountPath: /mnt
+        args:
+        - |
+          set -xeou pipefail
+          apk add --no-cache jq curl
+
+          QLEN=$(jq length /mnt/quotes.json)
+          RNUM=$(( ( RANDOM % ${QLEN} )  + 1 ))
+
+          AUTHOR=$(cat /mnt/quotes.json | jq -r ".[${RNUM}].author")
+          MESSAGE=$(cat /mnt/quotes.json | jq -r ".[${RNUM}].text")
+
+          curl -d "{\"channel\":\"demo\", \"message\": \"${AUTHOR} once said: ${MESSAGE}\"}" \
+            -H "Content-Type: application/json" -X POST http://slackhook-eventsource-svc.quotes-bot:12000/slack

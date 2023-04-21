@@ -1,0 +1,13 @@
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: global-labels
+labels:
+  app.kubernetes.io/name: ldap
+  app.kubernetes.io/instance: ldap
+  app.kubernetes.io/component: ldap
+  app.kubernetes.io/part-of: idp
+  app.kubernetes.io/environment: local
+fieldSpecs:
+- path: metadata/labels
+  create: true

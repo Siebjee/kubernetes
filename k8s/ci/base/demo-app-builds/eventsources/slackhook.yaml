@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: slackhook
+  namespace: demo-app-builds
+  labels:
+    app.kubernetes.io/name: slackhook
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/part-of: argo-events
+spec:
+  service:
+    ports:
+    - port: 12000
+      targetPort: 12000
+  webhook:
+    slack:
+      port: "12000"
+      endpoint: /slack
+      method: POST
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: slackhook
+  namespace: demo-app-builds
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+  labels:
+    app.kubernetes.io/part-of: demo
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/instance: slackhook
+spec:
+  rules:
+  - host: slackhook.k8s-local.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: slackhook-eventsource-svc
+            port:
+              number: 12000

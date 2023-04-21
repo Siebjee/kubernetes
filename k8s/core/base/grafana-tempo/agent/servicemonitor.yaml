@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: grafana-agent-traces
+  labels:
+    instance: primary
+spec:
+  endpoints:
+  - port: grafana-agent-traces-http-metrics
+    relabelings:
+    - replacement: grafana-tempo/agent
+      sourceLabels:
+      - job
+      targetLabel: job
+    scheme: http
+  namespaceSelector:
+    matchNames:
+    - grafana-tempo
+  selector:
+    matchLabels:
+      name: grafana-agent-traces

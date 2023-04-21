@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openldap
+  namespace: ldap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ldap
+  template:
+    metadata:
+      labels:
+        app: ldap
+    spec:
+      volumes:
+      - name: ldiff
+        configMap:
+          name: ldap-bootstrap
+      - name: bootstrap
+        emptyDir: {}
+      initContainers:
+      - name: bootstrap
+        image: alpine
+        command: [sh, -c]
+        args:
+        - |
+          cat /mnt/ldif/50-bootstrap.ldif > /mnt/bootstrap/50-bootstrap.ldif
+        volumeMounts:
+        - name: ldiff
+          mountPath: /mnt/ldif
+        - name: bootstrap
+          mountPath: /mnt/bootstrap
+      containers:
+      - image: osixia/openldap:1.5.0
+        imagePullPolicy: IfNotPresent
+        name: server
+        ports:
+        - containerPort: 389
+        args:
+        - --copy-service
+        - --loglevel
+        - debug
+        envFrom:
+        - configMapRef:
+            name: env-vars
+        volumeMounts:
+        - name: bootstrap
+          mountPath: /container/service/slapd/assets/config/bootstrap/ldif/custom
+        resources:
+          limits:
+            cpu: 100m
+            memory: 300Mi
+          requests:
+            cpu: 100m
+            memory: 300Mi
+        startupProbe:
+          tcpSocket:
+            port: 389
+          initialDelaySeconds: 40
+          failureThreshold: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+        livenessProbe:
+          tcpSocket:
+            port: 389
+          failureThreshold: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+        readinessProbe:
+          tcpSocket:
+            port: 389
+          periodSeconds: 5
+          timeoutSeconds: 2

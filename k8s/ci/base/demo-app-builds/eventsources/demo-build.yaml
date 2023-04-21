@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: demo-build-webhook
+  namespace: demo-app-builds
+  labels:
+    app.kubernetes.io/name: demo
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/part-of: builds
+spec:
+  service:
+    ports:
+    - port: 12001
+      targetPort: 12001
+  webhook:
+    main-webhook:
+      port: "12001"
+      endpoint: /main
+      method: POST
+    banana-webhook:
+      port: "12001"
+      endpoint: /banana
+      method: POST
+    apple-webhook:
+      port: "12001"
+      endpoint: /apple
+      method: POST
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-build
+  namespace: demo-app-builds
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+  labels:
+    app.kubernetes.io/part-of: demo
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/instance: ingress
+spec:
+  rules:
+  - host: demo.builds.k8s-local.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-build-webhook-eventsource-svc
+            port:
+              number: 12001

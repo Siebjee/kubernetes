@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: searx
+  labels:
+    app.kubernetes.io/name: searx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: searx
+  template:
+    metadata:
+      labels:
+        app: searx
+    spec:
+      volumes:
+      - name: settings
+        configMap:
+          name: settings
+      containers:
+      - name: searx
+        image: searx
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: env-vars
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /etc/searxng/settings.yml
+          name: settings
+          subPath: settings.yml

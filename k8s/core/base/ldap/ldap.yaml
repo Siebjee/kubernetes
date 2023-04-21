@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ldap-bootstrap
+  namespace: ldap
+data:
+  50-bootstrap.ldif: |
+    dn: ou=users,dc=example,dc=com
+    objectClass: organizationalUnit
+    ou: users
+
+    dn: ou=groups,dc=example,dc=com
+    objectClass: organizationalUnit
+    ou: groups
+
+    dn: uid=john,ou=users,dc=example,dc=com
+    objectClass: top
+    objectClass: account
+    objectClass: posixAccount
+    objectClass: shadowAccount
+    objectClass: PostfixBookMailAccount
+    cn: John Doe
+    uid: john
+    mail: john.doe@example.com
+    uidNumber: 16859
+    gidNumber: 16859
+    homeDirectory: /home/john
+    loginShell: /bin/bash
+    gecos: john
+    userPassword: john
+    shadowLastChange: 0
+    shadowMax: 0
+    shadowWarning: 0
+
+    dn: uid=jane,ou=users,dc=example,dc=com
+    objectClass: top
+    objectClass: account
+    objectClass: posixAccount
+    objectClass: shadowAccount
+    objectClass: PostfixBookMailAccount
+    cn: Jane Doe
+    uid: jane
+    mail: jane.doe@example.com
+    uidNumber: 16860
+    gidNumber: 16860
+    homeDirectory: /home/jane
+    loginShell: /bin/bash
+    gecos: jane
+    userPassword: jane
+    shadowLastChange: 0
+    shadowMax: 0
+    shadowWarning: 0
+
+    dn: cn=test-group,ou=groups,dc=example,dc=com
+    objectClass: groupOfNames
+    cn: test-group
+    description: Just a test group
+    member: cn=john,ou=users,dc=example,dc=com
+    member: cn=jane,ou=users,dc=example,dc=com

@@ -1,0 +1,82 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: grafana-tempo
+  namespace: grafana-tempo
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: tempo-distributed
+      version: ">=1.2.2 <2.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 15m
+  values:
+    serviceAccount:
+      name: grafana-tempo
+
+    metaMonitoring:
+      serviceMonitor:
+        enabled: true
+        labels:
+          instance: primary
+      grafanaAgent:
+        enabled: false
+
+    minio:
+      enabled: false
+
+    traces:
+      otlp:
+        grpc:
+          enabled: true
+
+    distributor:
+      replicas: 1
+      autoscaling:
+        enabled: false
+
+    ingester:
+      replicas: 2
+      autoscaling:
+        enabled: false
+
+    storage:
+      trace:
+        backend: local
+
+    search:
+      enabled: true
+
+    metricsGenerator:
+      enabled: true
+      config:
+        storage:
+          remote_write:
+          - url: http://grafana-mimir-nginx.grafana-mimir.svc.cluster.local/api/v1/push
+
+    global_overrides:
+      metrics_generator_processors:
+      - service-graphs
+      - span-metrics
+
+    compactor:
+      config:
+        compaction:
+          block_retention: 12h
+
+    tempo:
+      structuredConfig:
+        query_frontend:
+          search:
+            max_duration: 12h0m0s
+        storage:
+          trace:
+            pool:
+              max_workers: 100
+              queue_depth: 10000
+            block:
+              version: vParquet

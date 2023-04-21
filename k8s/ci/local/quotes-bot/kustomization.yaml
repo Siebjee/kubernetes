@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: quotes-bot
+namespace: quotes-bot
+resources:
+- ../../base/quotes-bot
+- sealed-slack.yaml

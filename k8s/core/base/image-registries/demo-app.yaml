@@ -1,0 +1,60 @@
+: image.toolkit.fluxcd.io/v1alpha1
+kind: ImageRepository
+metadata:
+  name: demo-app
+  namespace: flux-system
+spec:
+  image: harbor.k8s-local.io/demo/http-echo
+  interval: 10m
+  certSecretRef:
+    name: harbor-tls-certs
+  secretRef:
+    name: regcred
+
+---
+apiVersion: image.toolkit.fluxcd.io/v1alpha1
+kind: ImagePolicy
+metadata:
+  name: demo-app
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: demo-app
+  filterTags:
+    pattern: '^(?P<version>[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3})$'
+    extract: '$version'
+  policy:
+    semver:
+      range: '>=0.1.0'
+
+---
+apiVersion: image.toolkit.fluxcd.io/v1alpha1
+kind: ImagePolicy
+metadata:
+  name: demo-app-apple
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: demo-app
+  filterTags:
+    pattern: '^(?P<version>.*)-apple'
+    extract: '$version'
+  policy:
+    semver:
+      range: '>=0.1.0-0'
+
+---
+apiVersion: image.toolkit.fluxcd.io/v1alpha1
+kind: ImagePolicy
+metadata:
+  name: demo-app-banana
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: demo-app
+  filterTags:
+    pattern: '^(?P<version>.*)-banana'
+    extract: '$version'
+  policy:
+    semver:
+      range: '>=0.1.0-0'

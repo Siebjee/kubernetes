@@ -1,0 +1,13 @@
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: global-labels
+labels:
+  app.kubernetes.io/name: external-secrets
+  app.kubernetes.io/component: external-secrets
+  app.kubernetes.io/instance: external-secrets
+  app.kubernetes.io/managed-by: flux
+  needs-secret-gcp: true
+fieldSpecs:
+- path: metadata/labels
+  create: true

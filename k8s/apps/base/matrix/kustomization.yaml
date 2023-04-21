@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: matrix
+resources:
+- postgres/service.yaml
+- postgres/pvc.yaml
+- postgres/configmap.yaml
+- postgres/statefulset.yaml
+- postgres/secret.yaml
+- namespace.yaml
+- synapse/deployment.yaml
+- synapse/ingress.yaml
+- synapse/service.yaml
+- synapse/pvc.yaml
+- delegation/ingress.yaml
+- delegation/deployment.yaml
+- delegation/service.yaml
+
+transformers:
+- common-labels.yaml

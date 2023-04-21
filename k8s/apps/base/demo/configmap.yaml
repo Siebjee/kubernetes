@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: latest-image-apple
+  namespace: demo
+data:
+  image: harbor.k8s-local.io/demo/http-echo:0.4.0-apple # {"$imagepolicy": "flux-system:demo-app-apple"}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: latest-image-banana
+  namespace: demo
+data:
+  image: harbor.k8s-local.io/demo/http-echo:0.4.1-banana # {"$imagepolicy": "flux-system:demo-app-banana"}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: latest-image-main
+  namespace: demo
+data:
+  mage: harbor.k8s-local.io/demo/http-echo:0.4.0 # {"$imagepolicy": "flux-system:demo-app"}

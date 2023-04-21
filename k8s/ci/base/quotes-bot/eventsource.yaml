@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: slackhook
+  namespace: quotes-bot
+  labels:
+    app.kubernetes.io/name: slackhook
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/part-of: quotes-bot
+spec:
+  service:
+    ports:
+    - port: 12000
+      targetPort: 12000
+  webhook:
+    slack:
+      port: "12000"
+      endpoint: /slack
+      method: POST

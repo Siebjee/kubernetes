@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ldap
+resources:
+- namespace.yaml
+- deployment.yaml
+- ldap.yaml
+- service.yaml
+
+configMapGenerator:
+- name: env-vars
+  literals:
+  - LDAP_ADMIN_PASSWORD="notapassword"
+  - LDAP_ORGANISATION="example"
+  - LDAP_DOMAIN="example.com"
+
+transformers:
+- common-labels.yaml

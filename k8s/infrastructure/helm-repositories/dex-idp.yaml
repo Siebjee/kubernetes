@@ -1,0 +1,8 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  name: dex-idp
+  namespace: flux-system
+spec:
+  url: https://charts.dexidp.io
+  interval: 60m

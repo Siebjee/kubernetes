@@ -1,0 +1,5 @@
+# Source: https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/aws.md
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-dns

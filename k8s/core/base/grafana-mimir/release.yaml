@@ -1,0 +1,103 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: grafana-mimir
+  namespace: grafana-mimir
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: mimir-distributed
+      version: ">=4.2.0 <5.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval: 5m
+  values:
+    metaMonitoring:
+      serviceMonitor:
+        enabled: true
+        labels:
+          instance: primary
+
+    rollout_operator:
+      enabled: false
+
+    alertmanager:
+      persistentVolume:
+        enabled: true
+      replicas: 1
+      statefulSet:
+        enabled: true
+
+    compactor:
+      persistentVolume:
+        size: 50Gi
+
+    distributor:
+      replicas: 1
+
+    ingester:
+      zoneAwareReplication:
+        enabled: false
+      persistentVolume:
+        size: 50Gi
+      replicas: 3
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: target
+                operator: In
+                values:
+                - ingester
+            topologyKey: 'kubernetes.io/hostname'
+
+    minio:
+      enabled: false
+
+    overrides_exporter:
+      replicas: 1
+
+    querier:
+      replicas: 2
+
+    query_frontend:
+      replicas: 1
+
+    ruler:
+      replicas: 1
+
+    store_gateway:
+      zoneAwareReplication:
+        enabled: false
+      persistentVolume:
+        size: 50Gi
+      replicas: 1
+
+    rbac:
+      create: false
+
+    mimir:
+      structuredConfig:
+        multitenancy_enabled: false
+        limits:
+          ingestion_rate: 200000
+          ingestion_burst_size: 2000000
+          max_global_series_per_user: 0
+          out_of_order_time_window: 30m
+        server:
+          grpc_server_max_recv_msg_size: 104857600
+          grpc_server_max_send_msg_size: 104857600
+          grpc_server_max_concurrent_streams: 1000
+        frontend:
+          log_queries_longer_than: 10s
+          align_queries_with_step: true
+        ingester_client:
+          grpc_client_config:
+            max_recv_msg_size: 104857600
+            max_send_msg_size: 104857600
+        blocks_storage:
+          backend: s3
